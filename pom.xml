@@ -8,6 +8,14 @@
     <artifactId>cache-file</artifactId>
     <version>1.0</version>
 
+    <description>Cache use File</description>
+
+    <url>https://github.com/solitarysp/cacheFile</url>
+    <scm>
+        <connection>scm:git:git://github.com/solitarysp/cacheFile.git</connection>
+        <url>https://github.com/solitarysp/cacheFile</url>
+    </scm>
+
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
