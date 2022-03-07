@@ -7,7 +7,8 @@
     <groupId>com.lethanh98</groupId>
     <artifactId>cache-file</artifactId>
     <version>1.0</version>
-
+    <packaging>jar</packaging>
+    <name>cache-file</name>
     <description>Cache use File</description>
 
     <url>https://github.com/solitarysp/cacheFile</url>
