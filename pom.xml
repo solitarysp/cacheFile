@@ -116,7 +116,6 @@
                         </goals>
                         <configuration>
                             <keyname>486D5652787D85E1</keyname>
-                            <!--                            <gpg.passphrase>supersecurepassword</gpg.passphrase>-->
                         </configuration>
                     </execution>
                 </executions>
