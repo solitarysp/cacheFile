@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.*;
 import java.nio.channels.FileLock;
 import java.util.*;
+import java.util.stream.Stream;
 
 @Slf4j
 @Data
@@ -14,6 +15,9 @@ public class CacheFile<K extends Serializable, V extends Serializable> implement
 
     public CacheFile(String urlFolder) {
         this.fileFolder = new File(urlFolder);
+        if (!this.fileFolder.isDirectory()) {
+            throw new RuntimeException("Url not is folder");
+        }
     }
 
     @Override
@@ -60,17 +64,11 @@ public class CacheFile<K extends Serializable, V extends Serializable> implement
             checkNull(value);
             File persistenceFile = pathToFileFor(key);
             persistenceFile.getParentFile().mkdirs();
-            FileOutputStream fileOutputStream = new FileOutputStream(persistenceFile);
-            try {
-                FileLock fileLock = fileOutputStream.getChannel().lock();
-                try {
+            try (FileOutputStream fileOutputStream = new FileOutputStream(persistenceFile)) {
+                try (FileLock ignored = fileOutputStream.getChannel().lock()) {
                     persist(value, fileOutputStream);
                     return value;
-                } finally {
-                    fileLock.release();
                 }
-            } finally {
-                fileOutputStream.close();
             }
         } catch (java.io.IOException e) {
             log.error(e.getMessage(), e);
@@ -132,12 +130,9 @@ public class CacheFile<K extends Serializable, V extends Serializable> implement
         List<V> list = new ArrayList<>();
         for (File file : fileFolder.listFiles()) {
             try (FileInputStream fileInputStream = new FileInputStream(file)) {
-                FileLock fileLock = fileInputStream.getChannel().lock(0, Long.MAX_VALUE, true);
-                try {
+                try (FileLock ignored = fileInputStream.getChannel().lock(0, Long.MAX_VALUE, true)) {
                     V v = (V) new ObjectInputStream(fileInputStream).readObject();
                     list.add(v);
-                } finally {
-                    fileLock.release();
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -147,22 +142,32 @@ public class CacheFile<K extends Serializable, V extends Serializable> implement
         return list;
     }
 
+    public Stream<V> toStream() {
+        return Arrays.stream(fileFolder.listFiles()).map(file -> {
+            try (FileInputStream fileInputStream = new FileInputStream(file)) {
+                FileLock fileLock = fileInputStream.getChannel().lock(0, Long.MAX_VALUE, true);
+                try {
+                    return readPersisted("key", fileInputStream);
+                } finally {
+                    fileLock.release();
+                }
+            } catch (Exception e) {
+                log.warn("Error: " + e.getMessage(), e);
+                return null;
+            }
+        }).filter(Objects::nonNull);
+    }
+
     protected V findPersisted(Object key) throws IOException {
         File persistenceFile = pathToFileFor(key);
         if (!persistenceFile.exists()) return null;
-        FileInputStream fileInputStream = new FileInputStream(persistenceFile);
-        try {
-            FileLock fileLock = fileInputStream.getChannel().lock(0, Long.MAX_VALUE, true);
-            try {
+        try (FileInputStream fileInputStream = new FileInputStream(persistenceFile)) {
+            try (FileLock ignored = fileInputStream.getChannel().lock(0, Long.MAX_VALUE, true)) {
                 return readPersisted(key, fileInputStream);
-            } finally {
-                fileLock.release();
             }
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException(e);
-        } finally {
-            fileInputStream.close();
         }
     }
 
