@@ -1,5 +1,6 @@
 package com.lethanh98.cachefile;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -10,14 +11,17 @@ import java.util.stream.Stream;
 
 @Slf4j
 @Data
+@Builder(builderMethodName = "hiddenBuilder")
 public class CacheFile<K extends Serializable, V extends Serializable> implements Map<K, V> {
     private File fileFolder;
+    private boolean keyEncodeByHashCode;
 
-    public CacheFile(String urlFolder) {
-        this.fileFolder = new File(urlFolder);
-        if (!this.fileFolder.isDirectory()) {
+    public static CacheFileBuilder builder(String urlFolder) {
+        File fileFolder = new File(urlFolder);
+        if (!fileFolder.isDirectory()) {
             throw new RuntimeException("Url not is folder");
         }
+        return hiddenBuilder().fileFolder(fileFolder);
     }
 
     @Override
@@ -180,7 +184,7 @@ public class CacheFile<K extends Serializable, V extends Serializable> implement
     }
 
     private File pathToFileFor(Object key) {
-        File persistenceFile = new File(fileFolder, key.hashCode() + "");
+        File persistenceFile = new File(fileFolder, getKey(key));
         if (persistenceFile.isDirectory()) {
             throw new IllegalArgumentException();
         }
@@ -191,5 +195,12 @@ public class CacheFile<K extends Serializable, V extends Serializable> implement
         if (Objects.isNull(data)) {
             throw new NullPointerException();
         }
+    }
+
+    private String getKey(Object key) {
+        if (isKeyEncodeByHashCode()) {
+            return String.valueOf(key.hashCode());
+        }
+        return key.toString();
     }
 }

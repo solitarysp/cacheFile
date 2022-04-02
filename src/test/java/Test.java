@@ -9,10 +9,11 @@ public class Test {
 
     @org.junit.jupiter.api.Test
     public void test() {
-        CacheFile<String, TestClass> mapFIle = new CacheFile(WORKING_DIR + "\\src\\test\\testFolder");
+
+        CacheFile<TestClass, TestClass> mapFIle = CacheFile.builder(WORKING_DIR + "\\src\\test\\testFolder").build();
         TestClass data = new TestClass("Thành");
-        mapFIle.put("t", new TestClass("Thành"));
-        Assertions.assertEquals(data, mapFIle.get("t"));
+        mapFIle.put(data, new TestClass("Thành"));
+        Assertions.assertEquals(data, mapFIle.get(data));
         System.out.println(mapFIle.toList());
         System.out.println(mapFIle.getFileFolder());
         Assertions.assertFalse(mapFIle.isEmpty());
