@@ -24,6 +24,16 @@ public class CacheFile<K extends Serializable, V extends Serializable> implement
         return hiddenBuilder().fileFolder(fileFolder);
     }
 
+    public static CacheFileBuilder builder(String urlFolder, boolean autoCreateFolder) {
+        File fileFolder = new File(urlFolder);
+        if (!fileFolder.isDirectory()) {
+            if (autoCreateFolder) {
+                fileFolder.mkdirs();
+            }
+        }
+        return hiddenBuilder().fileFolder(fileFolder);
+    }
+
     @Override
     public int size() {
         return fileFolder.listFiles().length;
