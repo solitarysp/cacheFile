@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.*;
 import java.nio.channels.FileLock;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -157,7 +158,7 @@ public class CacheFile<K extends Serializable, V extends Serializable> implement
     }
 
     public Stream<V> toStream() {
-        return Arrays.stream(fileFolder.listFiles()).map(file -> {
+        return Arrays.stream(Objects.requireNonNull(fileFolder.listFiles())).map(file -> {
             try (FileInputStream fileInputStream = new FileInputStream(file)) {
                 FileLock fileLock = fileInputStream.getChannel().lock(0, Long.MAX_VALUE, true);
                 try {
@@ -170,6 +171,45 @@ public class CacheFile<K extends Serializable, V extends Serializable> implement
                 return null;
             }
         }).filter(Objects::nonNull);
+    }
+
+    public List<File> listFileError() {
+        return Arrays.stream(Objects.requireNonNull(fileFolder.listFiles())).map(file -> {
+            try (FileInputStream fileInputStream = new FileInputStream(file)) {
+                FileLock fileLock = fileInputStream.getChannel().lock(0, Long.MAX_VALUE, true);
+                try {
+                    V a = readPersisted("key", fileInputStream);
+                    return null;
+                } finally {
+                    fileLock.release();
+                }
+            } catch (Exception e) {
+                log.warn("Error: " + e.getMessage(), e);
+                return file;
+            }
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+    }
+
+    public boolean clearFileErrors() {
+        List<File> errorFiles = Arrays.stream(Objects.requireNonNull(fileFolder.listFiles())).map(file -> {
+            try (FileInputStream fileInputStream = new FileInputStream(file)) {
+                FileLock fileLock = fileInputStream.getChannel().lock(0, Long.MAX_VALUE, true);
+                try {
+                    V a = (V) readPersisted("key", fileInputStream);
+                    return null;
+                } finally {
+                    fileLock.release();
+                }
+            } catch (Exception e) {
+                log.warn("Error: " + e.getMessage(), e);
+                return file;
+            }
+        }).filter(Objects::nonNull).collect(Collectors.toList());
+
+        for (File file : errorFiles) {
+            file.delete();
+        }
+        return true;
     }
 
     protected V findPersisted(Object key) throws IOException {

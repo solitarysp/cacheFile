@@ -10,7 +10,7 @@ public class Test {
     @org.junit.jupiter.api.Test
     public void test() {
 
-        CacheFile<TestClass, TestClass> mapFIle = CacheFile.builder(WORKING_DIR + "\\src\\test\\testFolder",true).build();
+        CacheFile<TestClass, TestClass> mapFIle = CacheFile.builder(WORKING_DIR + "\\src\\test\\testFolder", true).build();
         TestClass data = new TestClass("Thành");
         mapFIle.put(data, new TestClass("Thành"));
         Assertions.assertEquals(data, mapFIle.get(data));
