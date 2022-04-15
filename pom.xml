@@ -6,7 +6,7 @@
 
     <groupId>com.lethanh98</groupId>
     <artifactId>cache-file</artifactId>
-    <version>1.3</version>
+    <version>1.4</version>
     <packaging>jar</packaging>
     <name>cache-file</name>
     <description>Cache use File</description>
