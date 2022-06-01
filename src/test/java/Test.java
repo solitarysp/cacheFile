@@ -1,4 +1,4 @@
-import com.lethanh98.cachefile.CacheFile;
+import com.lethanh98.cachefile.CacheFileNew;
 import lombok.*;
 import org.junit.jupiter.api.Assertions;
 
@@ -9,8 +9,7 @@ public class Test {
 
     @org.junit.jupiter.api.Test
     public void test() {
-
-        CacheFile<TestClass, TestClass> mapFIle = CacheFile.builder(WORKING_DIR + "\\src\\test\\testFolder", true).build();
+        CacheFileNew<TestClass, TestClass> mapFIle = CacheFileNew.builder(WORKING_DIR + "\\src\\test\\testFolder", TestClass.class).build();
         TestClass data = new TestClass("Thành");
         mapFIle.put(data, new TestClass("Thành"));
         Assertions.assertEquals(data, mapFIle.get(data));
