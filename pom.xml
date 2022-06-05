@@ -6,7 +6,7 @@
 
     <groupId>com.lethanh98</groupId>
     <artifactId>cache-file</artifactId>
-    <version>1.5</version>
+    <version>1.6</version>
     <packaging>jar</packaging>
     <name>cache-file</name>
     <description>Cache use File</description>
@@ -56,7 +56,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.9.3</version>
+            <version>2.13.3</version>
         </dependency>
     </dependencies>
 
