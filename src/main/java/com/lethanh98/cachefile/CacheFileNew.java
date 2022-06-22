@@ -101,7 +101,7 @@ public class CacheFileNew<K, V> implements Map<K, V> {
     public V get(Object key) {
         try {
             return findPersisted(key);
-        } catch (IOException e) {
+        } catch (Exception e) {
             return null;
         }
     }
