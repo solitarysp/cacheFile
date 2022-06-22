@@ -1,22 +1,15 @@
 package com.lethanh98.cachefile;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.io.*;
+import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -24,10 +17,12 @@ import java.util.stream.Stream;
 @Data
 @Builder(toBuilder = true, builderClassName = "CacheFileInternalBuilder", builderMethodName = "hiddenBuilder")
 public class CacheFileNew<K, V> implements Map<K, V> {
+    private ScheduledExecutorService scheduler;
     private File fileFolder;
     private EncodeAndDecode<V> encodeAndDecode;
     private boolean keyEncodeByHashCode;
     private Class<V> classKey;
+    private CleanTime cleanTime;
 
     public static Builder builder(String urlFolder, Class classKey) {
         File fileFolder = new File(urlFolder);
@@ -54,6 +49,20 @@ public class CacheFileNew<K, V> implements Map<K, V> {
                 }
             } catch (Exception e) {
 
+            }
+            if (Objects.nonNull(data.getCleanTime())) {
+                if (Objects.isNull(data.getCleanTime().getDuration())) {
+                    throw new RuntimeException("duration can not null");
+                }
+                if (Objects.isNull(data.getCleanTime().getTimeUnit())) {
+                    throw new RuntimeException("duration can not null");
+                }
+                data.setScheduler(Executors.newScheduledThreadPool(1));
+                data.toStream().forEach(o -> {
+                    Arrays.stream(Objects.requireNonNull(data.getFileFolder().listFiles())).forEach(file -> {
+                        data.setTimeOutClean(file.getName(), data.cleanTime);
+                    });
+                });
             }
             return data;
         }
@@ -104,6 +113,7 @@ public class CacheFileNew<K, V> implements Map<K, V> {
             File persistenceFile = pathToFileFor(key);
             try (FileOutputStream fileOutputStream = new FileOutputStream(persistenceFile)) {
                 persist(value, fileOutputStream);
+                setTimeOutClean(key, cleanTime);
                 return value;
             }
         } catch (IOException e) {
@@ -113,6 +123,15 @@ public class CacheFileNew<K, V> implements Map<K, V> {
             log.error(exception.getMessage(), exception);
             throw exception;
         }
+    }
+
+    private void setTimeOutClean(K key, CleanTime cleanTime) {
+        if (Objects.isNull(cleanTime)) {
+            return;
+        }
+        scheduler.schedule(() -> {
+            remove(key);
+        }, cleanTime.duration, cleanTime.timeUnit);
     }
 
     @Override
@@ -251,5 +270,14 @@ public class CacheFileNew<K, V> implements Map<K, V> {
             return String.valueOf(key.hashCode());
         }
         return key.toString();
+    }
+
+    @Data
+    @lombok.Builder
+    @AllArgsConstructor
+    public static class CleanTime {
+        private Integer duration;
+        private TimeUnit timeUnit;
+        private int ThreadPool = 1;
     }
 }
