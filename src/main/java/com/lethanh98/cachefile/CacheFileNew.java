@@ -138,6 +138,26 @@ public class CacheFileNew<K, V> implements Map<K, V> {
     }
   }
 
+  public V put(K key, V value, Integer duration, TimeUnit timeUnit) {
+    try {
+      checkNull(key);
+      checkNull(value);
+      File persistenceFile = pathToFileFor(key);
+      try (FileOutputStream fileOutputStream = new FileOutputStream(persistenceFile)) {
+        persist(value, fileOutputStream);
+        setTimeOutClean(key,
+            CacheFileNew.CleanTime.builder().duration(duration).timeUnit(timeUnit).build());
+        return value;
+      }
+    } catch (IOException e) {
+      log.error(e.getMessage(), e);
+      return null;
+    } catch (Exception exception) {
+      log.error(exception.getMessage(), exception);
+      throw exception;
+    }
+  }
+
   private void setTimeOutClean(K key, CleanTime cleanTime) {
     if (Objects.isNull(cleanTime)) {
       return;
