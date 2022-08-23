@@ -71,11 +71,11 @@ public class CacheFileNew<K, V> implements Map<K, V> {
         }
         data.setScheduler(Executors.newScheduledThreadPool(data.getCleanTime().getThreadPool()));
         data.getScheduler().schedule(() -> {
-          Arrays.stream(Objects.requireNonNull(data.getFileFolder().listFiles())).parallel()
+          Arrays.stream(Objects.requireNonNull(data.getFileFolder().list()))
               .forEach(file -> {
-                data.setTimeOutClean(file.getName(), data.cleanTime);
+                data.setTimeOutClean(file, data.cleanTime);
               });
-        }, 5, TimeUnit.SECONDS);
+        }, 2, TimeUnit.MINUTES);
       }
       return data;
     }
@@ -225,6 +225,10 @@ public class CacheFileNew<K, V> implements Map<K, V> {
       }
     }
     return list;
+  }
+
+  public List<String> toListKeys() {
+    return Arrays.asList(fileFolder.list());
   }
 
   public Stream<V> toStream() {
