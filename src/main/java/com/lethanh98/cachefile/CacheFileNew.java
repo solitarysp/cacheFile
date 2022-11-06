@@ -70,12 +70,10 @@ public class CacheFileNew<K, V> implements Map<K, V> {
           throw new RuntimeException("duration can not null");
         }
         data.setScheduler(Executors.newScheduledThreadPool(data.getCleanTime().getThreadPool()));
-        data.getScheduler().schedule(() -> {
-          Arrays.stream(Objects.requireNonNull(data.getFileFolder().list()))
-              .forEach(file -> {
-                data.setTimeOutClean(file, data.cleanTime);
-              });
-        }, 2, TimeUnit.MINUTES);
+        Arrays.stream(Objects.requireNonNull(data.getFileFolder().list()))
+            .forEach(file -> {
+              data.setTimeOutClean(file, data.cleanTime);
+            });
       }
       return data;
     }
